@@ -1,0 +1,14 @@
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.exe
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.deps.json
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.runtimeconfig.json
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.runtimeconfig.dev.json
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.dll
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\PlattsParser.pdb
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.AssemblyInfoInputs.cache
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.AssemblyInfo.cs
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.dll
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.pdb
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\Program.cs
+C:\Projects\C#\PlattsParser\bin\Debug\netcoreapp3.1\itextsharp.dll
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.csprojAssemblyReference.cache
+C:\Projects\C#\PlattsParser\obj\Debug\netcoreapp3.1\PlattsParser.csproj.CopyComplete

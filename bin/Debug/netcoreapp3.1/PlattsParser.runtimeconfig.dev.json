@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\norit\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\norit\\.nuget\\packages"
+    ]
+  }
+}
