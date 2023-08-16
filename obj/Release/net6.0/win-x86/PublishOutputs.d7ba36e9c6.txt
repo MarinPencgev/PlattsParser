@@ -1,0 +1,4 @@
+C:\Users\1\Source\Repos\PlattsParser\bin\Release\netcoreapp3.1\publish\PlattsParser.pdb
+C:\Users\1\Source\Repos\PlattsParser\bin\Release\netcoreapp3.1\publish\PDFParser.cs
+C:\Users\1\Source\Repos\PlattsParser\bin\Release\netcoreapp3.1\publish\Program.cs
+C:\Users\1\Source\Repos\PlattsParser\bin\Release\netcoreapp3.1\publish\PlattsParser.exe

@@ -1,10 +1,15 @@
-﻿using System;
+﻿using iTextSharp.text;
+using Org.BouncyCastle.Crypto;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
+using static iTextSharp.text.pdf.AcroFields;
 
 namespace PlattsParser
 {
@@ -12,7 +17,11 @@ namespace PlattsParser
     {
         static void Main(string[] args)
         {
-            var currentDir = Directory.GetCurrentDirectory();
+            //Only in production mode
+            //var currentDir = AppDomain.CurrentDomain.BaseDirectory;
+
+            //Debug mode
+            var currentDir = "C:\\Users\\1\\Desktop\\errorPlats";
 
             string[] paths = Directory.GetFiles($@"{currentDir}\RawFiles", "*.pdf");
             if (paths.Length == 0)
@@ -22,64 +31,114 @@ namespace PlattsParser
 
             List<string> neededPlatts = GetNeededPlatts(currentDir);
             var filteredTokens = new List<List<string>>();
-            var BuletinDate = "";
+            var progressList = new List<string>();
+            var buletinDate = "";
 
-            foreach (string path in paths)
+            try
             {
-                string fileContent = PDFConvert(path);
-
-                if (BuletinDate == "")
+                foreach (string path in paths)
                 {
-                    BuletinDate = GetBuletinDate(fileContent);
-                    filteredTokens.Add(new List<string>() { BuletinDate });
-                }
+                    progressList.Add(path.Split("\\").Last());
 
-                MatchCollection matches = Regex.Matches(fileContent, "([A-Z]+[0]{2})[0-9\\.\\-\\–\\s\\+]+");
+                    string fileContent = PDFConvert(path);
 
-                for (int i = 0; i < matches.Count; i++)
-                {
-                    var matchToken = matches[i].Value.Split(null).Where(x => !string.IsNullOrEmpty(x)).ToList();
-
-                    matchToken = RepairElementsPositions(matchToken);
-
-                    var codes = filteredTokens.Select(x => x[0]).ToList();
-
-                    if (neededPlatts.Contains(matchToken[0]) && !codes.Contains(matchToken[0]))
+                    if (buletinDate == "")
                     {
-                        filteredTokens.Add(matchToken);
+                        buletinDate = GetBuletinDate(fileContent);
+                        filteredTokens.Add(new List<string>() { buletinDate });
                     }
-                };
+                    //Old
+                    //MatchCollection matches = Regex.Matches(fileContent, "([A-Z]+[0]{2})[0-9\\.\\-\\–\\s\\+]+");
 
-                // Create and write to csv file
-                string strFilePath = $@"{currentDir}\TransformedFiles\ResultFile.csv";
-                string strSeperator = ",";
+                    //new
+                    MatchCollection matches = Regex.Matches(fileContent, "([A-Z]+[1]?[0]{1,2})[0-9\\.\\-–\\s\\+]+");
 
-                StringBuilder sbOutput = new StringBuilder();
+                    for (int i = 0; i < matches.Count; i++)
+                    {
+                        var matchToken = matches[i].Value.Split(null).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
-                for (int i = 0; i < filteredTokens.Count; i++)
+                        matchToken = RepairElementsPositions(matchToken);
+
+                        var codes = filteredTokens.Select(x => x[0]).ToList();
+
+                        if (neededPlatts.Contains(matchToken[0]) && !codes.Contains(matchToken[0]))
+                        {
+                            filteredTokens.Add(matchToken);
+                        }
+                    };
+
+                    // Create and write to csv file
+                    string strFilePath = $@"{currentDir}\TransformedFiles\ResultFile.csv";
+                    string strSeperator = ",";
+
+                    StringBuilder sbOutput = new StringBuilder();
+
+                    for (int i = 0; i < filteredTokens.Count; i++)
+                    {
+                        sbOutput.AppendLine(string.Join(strSeperator, filteredTokens[i]));
+                    }
+
+                    File.WriteAllText(strFilePath, sbOutput.ToString());
+
+                    //File.AppendAllText(strFilePath, sbOutput.ToString());
+                }
+                //throw new Exception("");
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("-----------------------------------");
+                Console.WriteLine("Прогрес в обработката на файлове:");
+                var counter = 1;
+                foreach (var item in progressList)
                 {
-                    sbOutput.AppendLine(string.Join(strSeperator, filteredTokens[i]));
+                    Console.WriteLine(counter++ + ". " + item);
                 }
 
-                File.WriteAllText(strFilePath, sbOutput.ToString());
+                Console.WriteLine("-----------------------------------");
+                Console.WriteLine("Прогрес в обработката на котировки:");
+                counter = 0;
+                foreach (var innerList in filteredTokens)
+                {
+                    if (counter > 0) //ignoring first iteration - date
+                    {
+                        Console.Write(counter + ". " + innerList.First());
 
-                //File.AppendAllText(strFilePath, sbOutput.ToString());
+                        Console.WriteLine();
+                    }
+                    counter++;
+                }
+                throw;
             }
-        }
 
-        private static Exception FileNotFoundException()
-        {
-            throw new NotImplementedException();
+            //Final check comparing results
+            if (filteredTokens.Count - 1 != neededPlatts.Count)
+            {
+                var cuatationsCount = filteredTokens.Count - 1;
+                Console.WriteLine("-----------------------------------");
+                Console.WriteLine("Изведени са " + cuatationsCount + " от зададените " + neededPlatts.Count);
+
+                var onlyCuatationsList = filteredTokens.Select(x=>x.First()).ToList();
+                var diff = onlyCuatationsList.Except(neededPlatts);
+                Console.WriteLine("Необработени котировки: " + String.Join(", ", diff));
+            }
         }
 
         private static string GetBuletinDate(string fileContent)
         {
-            var result = "";
-            result = Regex.Matches(fileContent.Split('/')[2], @"[\w]+\s[0-9]+,\s[0-9]+").First().Value;
-            var resultArray = result.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
-
-            return result = resultArray[1] + "." + GetMonthAsNumber(resultArray[0]) + "." + resultArray[2];
-
+            try
+            {
+                Console.WriteLine(fileContent.Split('/')[2]);
+                var result = fileContent.Split('/')[2];
+                result = Regex.Matches(fileContent.Split('/')[2], @"[\w]+(\s+)?[0-9]+(\s+)?[,](\s+)?[0-9]+").First().Value;
+                var resultArray = result.Split(new char[] { ' ', ',', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                return result = resultArray[1] + "." + GetMonthAsNumber(resultArray[0]) + "." + resultArray[2];
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("-----------------------------------");
+                Console.WriteLine("Грешка при обработката на датата на бюлетина");
+                throw;
+            }
         }
 
         private static string GetMonthAsNumber(string monthAsText)
